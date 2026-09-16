@@ -304,17 +304,18 @@ function historialJugador(nombre){
 window.historialJugador = historialJugador;
 
 function statsJugador(nombre){
-  const hist = historialJugador(nombre).filter(h=>h.jugado);
-  const pj = hist.length;
-  const pg = hist.filter(h=>h.estado==='V').length;
-  const pe = hist.filter(h=>h.estado==='E').length;
-  const pp = hist.filter(h=>h.estado==='D').length;
-  const gf = hist.reduce((s,h)=>s+h.goles,0);
-  const autog = hist.reduce((s,h)=>s+h.autogoles,0);
+  const histCompleto = historialJugador(nombre);
+  const jugadas = histCompleto.filter(h=>h.jugado);
+  const pj = jugadas.length;
+  const pg = jugadas.filter(h=>h.estado==='V').length;
+  const pe = jugadas.filter(h=>h.estado==='E').length;
+  const pp = jugadas.filter(h=>h.estado==='D').length;
+  const gf = jugadas.reduce((s,h)=>s+h.goles,0);
+  const autog = jugadas.reduce((s,h)=>s+h.autogoles,0);
   const pv = pj ? (pg/pj*100) : 0;
   const gxp = pj ? (gf/pj) : 0;
   const ptos = pg*3 + pe*1;
-  return {nombre, pj, pg, pe, pp, gf, autog, pv, gxp, ptos, hist};
+  return {nombre, pj, pg, pe, pp, gf, autog, pv, gxp, ptos, hist: histCompleto};
 }
 window.statsJugador = statsJugador;
 
