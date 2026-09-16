@@ -281,11 +281,11 @@ function renderPichichi(){
       ${window.ordenPichichi.asc?'⬆ Menor a mayor':'⬇ Mayor a menor'}
     </button>
   </div>`;
-  html += `<div class="row-between" style="padding:8px 12px;border-bottom:1px solid var(--border);">
+  html += `<div style="display:flex;align-items:center;gap:14px;padding:8px 12px;border-bottom:1px solid var(--border);">
     <span class="muted" style="width:22px;font-size:11px;">#</span>
-    <span class="muted" style="flex:1;font-size:11px;">Jugador</span>
+    <span class="muted" style="width:90px;font-size:11px;">Jugador</span>
     <span class="muted" style="font-size:11px;">Últimos 5</span>
-    <span class="muted" style="width:34px;font-size:11px;text-align:center;">PJ</span>
+    <span class="muted" style="margin-left:auto;font-size:11px;">PJ</span>
     <span class="muted" style="width:44px;font-size:11px;text-align:center;">GxP</span>
     <span class="muted" style="width:40px;font-size:11px;text-align:right;">Goles</span>
   </div>`;
@@ -374,9 +374,12 @@ function renderFicha(){
     <div class="scrollx card" style="padding:0;"><table class="simple" style="min-width:600px;">
     <tr><th>Jornada</th><th>Jugado</th><th>Equipo</th><th>Resultado</th><th>Estado</th><th>Goles</th><th>A.G.</th></tr>`;
   const capitaliza = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+  const hoy = new Date();
   s.hist.forEach(h=>{
     if (!h.jugado){
-      html += `<tr><td>J.${h.numero} (${fmtFecha(h.fecha,true)})</td><td>No</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>`;
+      const esFutura = h.fecha > hoy;
+      const colJugado = esFutura ? '—' : 'No';
+      html += `<tr><td>J.${h.numero} (${fmtFecha(h.fecha,true)})</td><td>${colJugado}</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>`;
     } else {
       const colorEstado = h.estado==='V'?'var(--success)':h.estado==='D'?'var(--danger)':'var(--warning)';
       const bgEstado = h.estado==='V'?'var(--success-bg)':h.estado==='D'?'var(--danger-bg)':'var(--warning-bg)';
