@@ -116,7 +116,10 @@ table.simple td{padding:6px 8px;border-bottom:1px solid var(--border);white-spac
       <p class="muted" style="font-size:12px;margin:0;">Temporada 26/27</p>
     </div>
   </div>
-  <button class="btn" onclick="toggleTheme()" aria-label="Cambiar tema claro/oscuro">☀️/🌙</button>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <button class="btn" onclick="toggleTheme()" aria-label="Cambiar tema claro/oscuro">☀️/🌙</button>
+    <button class="btn" onclick="accederPrivado(this)" aria-label="Acceso privado">🔒 Privado</button>
+  </div>
 </header>
 
 <nav id="main-nav">
@@ -129,7 +132,6 @@ table.simple td{padding:6px 8px;border-bottom:1px solid var(--border);white-spac
   <button class="nav-btn" onclick="showTab('comparar', this)">⚔️ Comparar</button>
   <button class="nav-btn" onclick="showTab('contabilidad', this)">💰 Contabilidad</button>
   <button class="nav-btn" onclick="showTab('historico', this)">📊 Histórico</button>
-  <button class="nav-btn" onclick="accederPrivado(this)">🔒 Privado</button>
 </nav>
 
 <main class="container">
