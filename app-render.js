@@ -12,18 +12,26 @@ function renderInicio(){
 
   // últimos resultados jugados (máx 2)
   const jugadas = CALENDARIO.filter(c => window.JORNADAS_DB[c.numero] && window.JORNADAS_DB[c.numero].jugado)
-    .sort((a,b)=>b.numero-a.numero).slice(0,2)
+    .sort((a,b)=>b.numero-a.numero).slice(0,5)
     .map(c=>{ const jd = window.JORNADAS_DB[c.numero]; const m = calcularMarcador(jd); return {numero:c.numero, m}; });
 
   let html = '';
   if (prox){
     html += `<div class="card" style="margin-bottom:14px;">
       <p class="muted" style="font-size:12px;margin:0 0 8px;">Próximo partido</p>
-      <div style="display:flex;align-items:center;gap:14px;">
-        <div class="logo-icon" style="width:40px;height:40px;">📅</div>
-        <div>
-          <p style="font-weight:500;font-size:16px;">Jornada ${prox.numero} · ${fmtFecha(prox.fecha,true)}</p>
-          <p class="secondary" style="font-size:13px;margin:4px 0 0;">📍 Pabellón Cerrillo de Maracena · 20:00</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div class="logo-icon" style="width:40px;height:40px;">📅</div>
+          <div>
+            <p style="font-weight:500;font-size:16px;margin:0;">Jornada ${prox.numero} · ${fmtFecha(prox.fecha,true)}</p>
+            <p class="secondary" style="font-size:13px;margin:4px 0 0;">📍 Pabellón Cerrillo de Maracena · 20:00</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <div class="center"><p style="font-size:18px;font-weight:500;margin:0;" id="ic-d">-</p><p class="muted" style="font-size:9px;margin:0;">días</p></div>
+          <div class="center"><p style="font-size:18px;font-weight:500;margin:0;" id="ic-h">-</p><p class="muted" style="font-size:9px;margin:0;">horas</p></div>
+          <div class="center"><p style="font-size:18px;font-weight:500;margin:0;" id="ic-m">-</p><p class="muted" style="font-size:9px;margin:0;">min</p></div>
+          <div class="center"><p style="font-size:18px;font-weight:500;margin:0;" id="ic-s">-</p><p class="muted" style="font-size:9px;margin:0;">seg</p></div>
         </div>
       </div>
     </div>`;
@@ -32,9 +40,20 @@ function renderInicio(){
   }
 
   html += `<div class="grid-3" style="margin-bottom:14px;">
-    <div class="metric"><div class="v">${lider?lider.nombre:'-'}</div><div class="l">Líder (${lider?lider.ptos:0} pts)</div></div>
-    <div class="metric"><div class="v">${pichichi?pichichi.nombre:'-'}</div><div class="l">Pichichi (${pichichi?pichichi.gf:0} G)</div></div>
-    <div class="metric" style="background:var(--success-bg);"><div class="v" style="color:var(--success);">${euros(bote)}</div><div class="l" style="color:var(--success);">Bote</div></div>
+    <div class="metric" style="background:var(--warning-bg);">
+      <div class="l" style="color:var(--warning);">Líder</div>
+      <div class="v" style="color:var(--warning);margin-top:4px;">${lider?lider.nombre:'-'}</div>
+      <div class="l" style="color:var(--warning);margin-top:2px;">${lider?lider.ptos:0} pts</div>
+    </div>
+    <div class="metric" style="background:var(--danger-bg);">
+      <div class="l" style="color:var(--danger);">Pichichi</div>
+      <div class="v" style="color:var(--danger);margin-top:4px;">${pichichi?pichichi.nombre:'-'}</div>
+      <div class="l" style="color:var(--danger);margin-top:2px;">${pichichi?pichichi.gf:0} goles</div>
+    </div>
+    <div class="metric" style="background:var(--success-bg);">
+      <div class="l" style="color:var(--success);">Bote</div>
+      <div class="v" style="color:var(--success);margin-top:4px;">${euros(bote)}</div>
+    </div>
   </div>`;
 
   html += `<div class="card" style="margin-bottom:14px;">
@@ -57,31 +76,38 @@ function renderInicio(){
     html += `<div class="row-between" style="border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;margin-bottom:6px;">
       <span class="secondary" style="font-size:13px;">Jornada ${j.numero}</span>
       <span style="font-weight:500;">Blanco ${j.m.golesBlanco} – ${j.m.golesNegro} Negro</span>
-      <span style="color:var(--success);">✓</span>
     </div>`;
   });
   el.innerHTML = html;
+  actualizarCuentaAtras('ic');
 }
 window.renderInicio = renderInicio;
 
 /* ============================================================
    RENDER: CALENDARIO
    ============================================================ */
-function actualizarCuentaAtras(){
-  const box = document.getElementById('cuenta-atras-box');
-  if (!box) return;
+function calcularCuentaAtras(){
   const prox = proximaJornada();
-  if (!prox){ box.innerHTML = '<p class="muted center">Temporada terminada</p>'; return; }
+  if (!prox) return null;
   const objetivo = new Date(prox.fecha); objetivo.setHours(20,0,0,0);
   const diff = Math.max(0, objetivo - new Date());
-  const d = Math.floor(diff/86400000);
-  const h = Math.floor((diff%86400000)/3600000);
-  const m = Math.floor((diff%3600000)/60000);
-  const s = Math.floor((diff%60000)/1000);
-  document.getElementById('ca-d').innerText = d;
-  document.getElementById('ca-h').innerText = String(h).padStart(2,'0');
-  document.getElementById('ca-m').innerText = String(m).padStart(2,'0');
-  document.getElementById('ca-s').innerText = String(s).padStart(2,'0');
+  return {
+    d: Math.floor(diff/86400000),
+    h: Math.floor((diff%86400000)/3600000),
+    m: Math.floor((diff%3600000)/60000),
+    s: Math.floor((diff%60000)/1000)
+  };
+}
+function actualizarCuentaAtras(prefix){
+  prefix = prefix || 'ca';
+  const elD = document.getElementById(prefix+'-d');
+  if (!elD) return;
+  const c = calcularCuentaAtras();
+  if (!c) return;
+  document.getElementById(prefix+'-d').innerText = c.d;
+  document.getElementById(prefix+'-h').innerText = String(c.h).padStart(2,'0');
+  document.getElementById(prefix+'-m').innerText = String(c.m).padStart(2,'0');
+  document.getElementById(prefix+'-s').innerText = String(c.s).padStart(2,'0');
 }
 window.actualizarCuentaAtras = actualizarCuentaAtras;
 
@@ -102,7 +128,7 @@ function renderJornadaCard(c, prox){
       if (+j.goles>0) tags += `<span class="tag tag-success">${j.goles} G</span>`;
       if (+j.autogoles>0) tags += ` <span class="tag tag-danger">${j.autogoles} PP</span>`;
       const supl = esSustituto(j.nombre) ? ` <span class="tag tag-muted" style="font-size:8px;">SUPL</span>` : '';
-      return `<div class="player-line"><span>${j.nombre}${supl}</span><span>${tags}</span></div>`;
+      return `<div class="player-line"><span class="pname">${j.nombre}${supl}</span><span>${tags}</span></div>`;
     }).join('');
     cuerpo = `<p class="secondary" style="font-size:12px;margin:8px 0 0;">${fmtFecha(c.fecha,true)}</p>
       <p style="font-weight:500;text-align:center;margin:8px 0 10px;">BLANCO ${m.golesBlanco} – ${m.golesNegro} NEGRO</p>
@@ -142,7 +168,7 @@ function renderCalendario(){
   });
 
   el.innerHTML = html;
-  actualizarCuentaAtras();
+  actualizarCuentaAtras('ca');
 }
 window.renderCalendario = renderCalendario;
 
@@ -156,10 +182,19 @@ function ordenarLista(lista, criterio, asc){
     gxp:(s)=>s.gxp, pj:(s)=>s.pj, pg:(s)=>s.pg, pp:(s)=>s.pp, pe:(s)=>s.pe
   };
   const f = claves[criterio] || claves.ptos;
+  const cascada = [(x)=>x.ptos, (x)=>x.gf, (x)=>x.pv, (x)=>x.gxp];
+  function desempate(a,b){
+    for (const g of cascada){
+      const diff = (g(b)||0) - (g(a)||0);
+      if (diff !== 0) return diff;
+    }
+    return (a.nombre||'').localeCompare(b.nombre||'');
+  }
   const copia = [...lista].sort((a,b)=>{
     const va=f(a), vb=f(b);
-    if (typeof va === 'string') return asc ? va.localeCompare(vb) : vb.localeCompare(va);
-    return asc ? va-vb : vb-va;
+    let cmp = (typeof va === 'string') ? va.localeCompare(vb) : va-vb;
+    if (!asc) cmp = -cmp;
+    return cmp !== 0 ? cmp : desempate(a,b);
   });
   return copia;
 }
@@ -184,14 +219,19 @@ function ultimos5Circulos(hist, tipo){
   }).join('');
 }
 
+function destacar(col, criterio){
+  return col===criterio ? 'font-weight:700;color:var(--accent);' : '';
+}
+
 function renderClasificacion(){
   const el = document.getElementById('clasificacion');
-  const stats = ordenarLista(jugadoresConPartidos(), window.ordenClasif.criterio, window.ordenClasif.asc);
+  const crit = window.ordenClasif.criterio;
+  const stats = ordenarLista(jugadoresConPartidos(), crit, window.ordenClasif.asc);
   let html = `<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
     <select onchange="window.ordenClasif.criterio=this.value; renderClasificacion();" style="flex:1;min-width:150px;">
       ${['ptos','alfabetico','gf','pv','gxp','pj','pg','pp','pe'].map(v=>{
         const labels={ptos:'Puntos',alfabetico:'Alfabético',gf:'Goles',pv:'% Victorias',gxp:'Goles por partido',pj:'Partidos jugados',pg:'Victorias',pp:'Derrotas',pe:'Empates'};
-        return `<option value="${v}" ${window.ordenClasif.criterio===v?'selected':''}>${labels[v]}</option>`;
+        return `<option value="${v}" ${crit===v?'selected':''}>${labels[v]}</option>`;
       }).join('')}
     </select>
     <button class="btn" onclick="window.ordenClasif.asc=!window.ordenClasif.asc; renderClasificacion();">
@@ -203,34 +243,35 @@ function renderClasificacion(){
     <div style="min-width:780px;">
       <div style="display:flex;align-items:center;gap:14px;padding:8px 12px;border-bottom:1px solid var(--border);">
         <span class="muted" style="width:22px;font-size:11px;">#</span>
-        <span class="muted" style="width:110px;font-size:11px;">Jugador</span>
+        <span class="muted" style="width:110px;font-size:11px;${destacar('alfabetico',crit)}">Jugador</span>
         <span class="muted" style="width:120px;font-size:11px;">Últimos 5</span>
-        <span class="muted" style="width:34px;font-size:11px;text-align:center;">PJ</span>
-        <span class="muted" style="width:34px;font-size:11px;text-align:center;">PG</span>
-        <span class="muted" style="width:34px;font-size:11px;text-align:center;">PE</span>
-        <span class="muted" style="width:34px;font-size:11px;text-align:center;">PP</span>
-        <span class="muted" style="width:44px;font-size:11px;text-align:center;">%V</span>
-        <span class="muted" style="width:34px;font-size:11px;text-align:center;">GF</span>
-        <span class="muted" style="width:44px;font-size:11px;text-align:center;">GxP</span>
-        <span class="muted" style="width:44px;font-size:11px;text-align:right;">PTOS</span>
+        <span class="muted" style="width:34px;font-size:11px;text-align:center;${destacar('pj',crit)}">PJ</span>
+        <span class="muted" style="width:34px;font-size:11px;text-align:center;${destacar('pg',crit)}">PG</span>
+        <span class="muted" style="width:34px;font-size:11px;text-align:center;${destacar('pe',crit)}">PE</span>
+        <span class="muted" style="width:34px;font-size:11px;text-align:center;${destacar('pp',crit)}">PP</span>
+        <span class="muted" style="width:44px;font-size:11px;text-align:center;${destacar('pv',crit)}">%V</span>
+        <span class="muted" style="width:34px;font-size:11px;text-align:center;${destacar('gf',crit)}">GF</span>
+        <span class="muted" style="width:44px;font-size:11px;text-align:center;${destacar('gxp',crit)}">GxP</span>
+        <span class="muted" style="width:44px;font-size:11px;text-align:right;${destacar('ptos',crit)}">PTOS</span>
       </div>`;
   stats.forEach((s,i)=>{
     const supl = esSustituto(s.nombre) ? ` <span class="tag tag-accent" style="font-size:8px;">SUSTITUTO</span>` : '';
     html += `<div style="display:flex;align-items:center;gap:14px;padding:9px 12px;border-bottom:1px solid var(--border);">
       <span style="width:22px;">${medalOrPos(i)}</span>
-      <span style="width:110px;font-weight:500;font-size:13px;">${s.nombre}${supl}</span>
+      <span style="width:110px;font-weight:500;font-size:13px;${destacar('alfabetico',crit)}">${s.nombre}${supl}</span>
       <div style="width:120px;display:flex;gap:3px;">${ultimos5Circulos(s.hist,'estado')}</div>
-      <span class="secondary" style="width:34px;text-align:center;font-size:12px;">${s.pj}</span>
-      <span class="secondary" style="width:34px;text-align:center;font-size:12px;">${s.pg}</span>
-      <span class="secondary" style="width:34px;text-align:center;font-size:12px;">${s.pe}</span>
-      <span class="secondary" style="width:34px;text-align:center;font-size:12px;">${s.pp}</span>
-      <span class="secondary" style="width:44px;text-align:center;font-size:12px;">${dec2(s.pv)}%</span>
-      <span class="secondary" style="width:34px;text-align:center;font-size:12px;">${s.gf}</span>
-      <span class="secondary" style="width:44px;text-align:center;font-size:12px;">${dec2(s.gxp)}</span>
-      <span style="width:44px;text-align:right;font-weight:500;font-size:14px;">${s.ptos}</span>
+      <span class="secondary" style="width:34px;text-align:center;font-size:12px;${destacar('pj',crit)}">${s.pj}</span>
+      <span class="secondary" style="width:34px;text-align:center;font-size:12px;${destacar('pg',crit)}">${s.pg}</span>
+      <span class="secondary" style="width:34px;text-align:center;font-size:12px;${destacar('pe',crit)}">${s.pe}</span>
+      <span class="secondary" style="width:34px;text-align:center;font-size:12px;${destacar('pp',crit)}">${s.pp}</span>
+      <span class="secondary" style="width:44px;text-align:center;font-size:12px;${destacar('pv',crit)}">${dec2(s.pv)}%</span>
+      <span class="secondary" style="width:34px;text-align:center;font-size:12px;${destacar('gf',crit)}">${s.gf}</span>
+      <span class="secondary" style="width:44px;text-align:center;font-size:12px;${destacar('gxp',crit)}">${dec2(s.gxp)}</span>
+      <span style="width:44px;text-align:right;font-weight:500;font-size:14px;${destacar('ptos',crit)}">${s.ptos}</span>
     </div>`;
   });
   html += `</div></div>`;
+  html += `<p class="muted" style="font-size:11px;margin:8px 0 0;">Criterios de desempate: Puntos → Goles → %V → GxP → Alfabético</p>`;
 
   html += `<p class="muted" style="font-size:12px;margin:16px 0 8px;">Evolución de puntos</p>
     <div class="card"><canvas id="graf-evolucion" height="180"></canvas></div>`;
@@ -267,15 +308,19 @@ function dibujarGraficaEvolucion(top){
 window.ordenPichichi = {criterio:'gf', asc:false};
 function renderPichichi(){
   const el = document.getElementById('pichichi');
+  const crit = window.ordenPichichi.criterio;
   const claves = {gf:(s)=>s.gf, gxp:(s)=>s.gxp};
   const stats = [...jugadoresConPartidos()].sort((a,b)=>{
-    const va=claves[window.ordenPichichi.criterio](a), vb=claves[window.ordenPichichi.criterio](b);
-    return window.ordenPichichi.asc ? va-vb : vb-va;
+    const va=claves[crit](a), vb=claves[crit](b);
+    let cmp = window.ordenPichichi.asc ? va-vb : vb-va;
+    if (cmp !== 0) return cmp;
+    if (b.gxp !== a.gxp) return b.gxp - a.gxp; // desempate 1: mejor GxP
+    return a.nombre.localeCompare(b.nombre); // desempate 2: alfabético
   });
   let html = `<div style="display:flex;gap:8px;margin-bottom:12px;">
     <select onchange="window.ordenPichichi.criterio=this.value; renderPichichi();" style="flex:1;">
-      <option value="gf" ${window.ordenPichichi.criterio==='gf'?'selected':''}>Goles</option>
-      <option value="gxp" ${window.ordenPichichi.criterio==='gxp'?'selected':''}>GxP</option>
+      <option value="gf" ${crit==='gf'?'selected':''}>Goles</option>
+      <option value="gxp" ${crit==='gxp'?'selected':''}>GxP</option>
     </select>
     <button class="btn" onclick="window.ordenPichichi.asc=!window.ordenPichichi.asc; renderPichichi();">
       ${window.ordenPichichi.asc?'⬆ Menor a mayor':'⬇ Mayor a menor'}
@@ -286,8 +331,8 @@ function renderPichichi(){
     <span class="muted" style="width:90px;font-size:11px;">Jugador</span>
     <span class="muted" style="font-size:11px;">Últimos 5</span>
     <span class="muted" style="margin-left:auto;font-size:11px;">PJ</span>
-    <span class="muted" style="width:44px;font-size:11px;text-align:center;">GxP</span>
-    <span class="muted" style="width:40px;font-size:11px;text-align:right;">Goles</span>
+    <span class="muted" style="width:44px;font-size:11px;text-align:center;${destacar('gxp',crit)}">GxP</span>
+    <span class="muted" style="width:40px;font-size:11px;text-align:right;${destacar('gf',crit)}">Goles</span>
   </div>`;
   stats.forEach((s,i)=>{
     html += `<div class="card" style="display:flex;align-items:center;gap:14px;margin-top:8px;padding:10px 12px;">
@@ -295,10 +340,11 @@ function renderPichichi(){
       <span style="width:90px;font-weight:500;font-size:13px;">${s.nombre}</span>
       <div style="display:flex;gap:3px;">${ultimos5Circulos(s.hist,'goles')}</div>
       <span class="secondary" style="margin-left:auto;font-size:12px;">${s.pj}</span>
-      <span class="secondary" style="width:44px;text-align:center;font-size:12px;">${dec2(s.gxp)}</span>
-      <span style="width:40px;text-align:right;font-weight:500;font-size:15px;">${s.gf}</span>
+      <span class="secondary" style="width:44px;text-align:center;font-size:12px;${destacar('gxp',crit)}">${dec2(s.gxp)}</span>
+      <span style="width:40px;text-align:right;font-weight:500;font-size:15px;${destacar('gf',crit)}">${s.gf}</span>
     </div>`;
   });
+  html += `<p class="muted" style="font-size:11px;margin:8px 0 0;">Criterios de desempate: Goles → GxP → Alfabético</p>`;
   el.innerHTML = html;
 }
 window.renderPichichi = renderPichichi;
@@ -523,6 +569,92 @@ function renderContabilidad(){
 window.renderContabilidad = renderContabilidad;
 
 /* ============================================================
+   RENDER: HISTÓRICO (clasificación completa por temporada)
+   ============================================================ */
+function ordenarTemporadas(lista){
+  // Ordena por el primer número de la temporada (ej. "26/27" -> 26), más reciente primero
+  return [...lista].sort((a,b)=>{
+    const na = parseInt((a.temporada||a.id||'0').split('/')[0]) || 0;
+    const nb = parseInt((b.temporada||b.id||'0').split('/')[0]) || 0;
+    return nb - na;
+  });
+}
+function calcularDerivados(j){
+  const pv = j.pj ? (j.pg/j.pj*100) : 0;
+  const gxp = j.pj ? (j.gf/j.pj) : 0;
+  return {...j, pv, gxp};
+}
+window.historicoSeleccionado = null;
+window.ordenHistorico = {criterio:'ptos', asc:false};
+function renderHistorico(){
+  const el = document.getElementById('historico');
+  const temporadas = ordenarTemporadas(window.HISTORICO || []);
+  if (temporadas.length === 0){
+    el.innerHTML = `<p class="muted center">Todavía no hay temporadas archivadas en el Histórico.</p>`;
+    return;
+  }
+  if (!window.historicoSeleccionado || !temporadas.find(t=>(t.temporada||t.id)===window.historicoSeleccionado)){
+    window.historicoSeleccionado = temporadas[0].temporada || temporadas[0].id;
+  }
+  const t = temporadas.find(t=>(t.temporada||t.id)===window.historicoSeleccionado);
+
+  let html = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">
+    ${temporadas.map(x=>{
+      const id = x.temporada||x.id;
+      const activo = id===window.historicoSeleccionado;
+      return `<button class="btn ${activo?'btn-primary':''}" onclick="window.historicoSeleccionado='${id}'; renderHistorico();">Temporada ${id}</button>`;
+    }).join('')}
+  </div>`;
+
+  html += `<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+    <select onchange="window.ordenHistorico.criterio=this.value; renderHistorico();" style="flex:1;min-width:150px;">
+      ${['ptos','alfabetico','gf','pv','gxp','pj','pg','pp','pe'].map(v=>{
+        const labels={ptos:'Puntos',alfabetico:'Alfabético',gf:'Goles',pv:'% Victorias',gxp:'Goles por partido',pj:'Partidos jugados',pg:'Victorias',pp:'Derrotas',pe:'Empates'};
+        return `<option value="${v}" ${window.ordenHistorico.criterio===v?'selected':''}>${labels[v]}</option>`;
+      }).join('')}
+    </select>
+    <button class="btn" onclick="window.ordenHistorico.asc=!window.ordenHistorico.asc; renderHistorico();">
+      ${window.ordenHistorico.asc?'⬆ Menor a mayor':'⬇ Mayor a menor'}
+    </button>
+  </div>`;
+
+  const crit = window.ordenHistorico.criterio;
+  const jugadores = ordenarLista(((t && t.jugadores) || []).map(calcularDerivados), crit, window.ordenHistorico.asc);
+
+  html += `<div class="scrollx card" style="padding:0;"><div style="min-width:840px;">
+    <div style="display:flex;align-items:center;gap:22px;padding:10px 16px;border-bottom:1px solid var(--border);">
+      <span class="muted" style="width:24px;font-size:11px;">#</span>
+      <span class="muted" style="width:140px;font-size:11px;${destacar('alfabetico',crit)}">Jugador</span>
+      <span class="muted" style="width:40px;font-size:11px;text-align:center;${destacar('pj',crit)}">PJ</span>
+      <span class="muted" style="width:40px;font-size:11px;text-align:center;${destacar('pg',crit)}">PG</span>
+      <span class="muted" style="width:40px;font-size:11px;text-align:center;${destacar('pe',crit)}">PE</span>
+      <span class="muted" style="width:40px;font-size:11px;text-align:center;${destacar('pp',crit)}">PP</span>
+      <span class="muted" style="width:50px;font-size:11px;text-align:center;${destacar('pv',crit)}">%V</span>
+      <span class="muted" style="width:40px;font-size:11px;text-align:center;${destacar('gf',crit)}">GF</span>
+      <span class="muted" style="width:50px;font-size:11px;text-align:center;${destacar('gxp',crit)}">GxP</span>
+      <span class="muted" style="width:50px;font-size:11px;text-align:right;${destacar('ptos',crit)}">PTOS</span>
+    </div>`;
+  jugadores.forEach((j,i)=>{
+    html += `<div style="display:flex;align-items:center;gap:22px;padding:10px 16px;border-bottom:1px solid var(--border);">
+      <span style="width:24px;">${medalOrPos(i)}</span>
+      <span style="width:140px;font-weight:500;font-size:13px;${destacar('alfabetico',crit)}">${j.nombre}</span>
+      <span class="secondary" style="width:40px;text-align:center;font-size:12px;${destacar('pj',crit)}">${j.pj||0}</span>
+      <span class="secondary" style="width:40px;text-align:center;font-size:12px;${destacar('pg',crit)}">${j.pg||0}</span>
+      <span class="secondary" style="width:40px;text-align:center;font-size:12px;${destacar('pe',crit)}">${j.pe||0}</span>
+      <span class="secondary" style="width:40px;text-align:center;font-size:12px;${destacar('pp',crit)}">${j.pp||0}</span>
+      <span class="secondary" style="width:50px;text-align:center;font-size:12px;${destacar('pv',crit)}">${dec2(j.pv)}%</span>
+      <span class="secondary" style="width:40px;text-align:center;font-size:12px;${destacar('gf',crit)}">${j.gf||0}</span>
+      <span class="secondary" style="width:50px;text-align:center;font-size:12px;${destacar('gxp',crit)}">${dec2(j.gxp)}</span>
+      <span style="width:50px;text-align:right;font-weight:500;font-size:14px;${destacar('ptos',crit)}">${j.ptos||0}</span>
+    </div>`;
+  });
+  html += `</div></div>`;
+  html += `<p class="muted" style="font-size:11px;margin:8px 0 0;">Criterios de desempate: Puntos → Goles → %V → GxP → Alfabético</p>`;
+  el.innerHTML = html;
+}
+window.renderHistorico = renderHistorico;
+
+/* ============================================================
    RENDER: PRIVADO
    ============================================================ */
 window.privadoSub = 'anadir';
@@ -531,7 +663,8 @@ function renderPrivado(){
   if (!window.adminAutenticado){ el.innerHTML = '<p class="muted">Inicia sesión para acceder.</p>'; return; }
   const subs = [
     ['anadir','Añadir resultado'], ['modificar','Modificar resultado'], ['contab','Contabilidad'],
-    ['addjug','Añadir jugadores'], ['modjug','Modificar jugadores'], ['sorteo','Sortear'], ['exportar','Exportar']
+    ['addjug','Añadir jugadores'], ['modjug','Modificar jugadores'], ['sorteo','Sortear'],
+    ['historico','Histórico'], ['exportar','Exportar']
   ];
   let html = `<div class="sub-nav">${subs.map(([id,label])=>
     `<button class="sub-nav-btn ${window.privadoSub===id?'active':''}" onclick="window.privadoSub='${id}'; renderPrivado();">${label}</button>`
@@ -540,7 +673,7 @@ function renderPrivado(){
   <div id="priv-content"></div>`;
   el.innerHTML = html;
   const map = {anadir:privadoAnadirResultado, modificar:privadoModificarResultado, contab:privadoContabilidad,
-    addjug:privadoAddJugador, modjug:privadoModJugador, sorteo:privadoSorteo, exportar:privadoExportar};
+    addjug:privadoAddJugador, modjug:privadoModJugador, sorteo:privadoSorteo, historico:privadoHistorico, exportar:privadoExportar};
   document.getElementById('priv-content').innerHTML = map[window.privadoSub]();
   if (window.privadoSub==='modificar') cargarSelectorJornadaModificar();
 }
@@ -826,6 +959,101 @@ function generarSorteo(){
     </div>`;
 }
 window.generarSorteo = generarSorteo;
+
+function privadoHistorico(){
+  const temporadas = ordenarTemporadas(window.HISTORICO || []);
+  return `
+    <p style="font-weight:500;font-size:13px;margin:0 0 10px;">Importar tabla pegada desde Excel</p>
+    <div class="formfield"><label>Temporada (ej. 25/26)</label><input type="text" id="hist-temporada" placeholder="25/26"></div>
+    <div class="formfield">
+      <label>Pega aquí las filas copiadas de Excel (con o sin la columna "Pos.")</label>
+      <textarea id="hist-pegado" rows="10" style="width:100%;font-family:monospace;font-size:12px;padding:8px;border-radius:var(--radius);border:1px solid var(--border-strong);background:var(--surface);color:var(--text);" placeholder="Jugador	PJ	PG	PE	PP	Puntos	%V	Goles	GxP
+Jorge	30	18	3	9	57	60.0%	70	2.33
+..."></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="importarHistoricoPegado()">Importar y guardar</button>
+    <p id="hist-msg" class="muted" style="font-size:12px;margin-top:8px;"></p>
+    <p class="muted" style="font-size:11px;margin-top:6px;">Nota: la tabla de Excel no trae autogoles, así que se guardan a 0 para las temporadas antiguas.</p>
+
+    <hr style="border-color:var(--border);margin:22px 0;">
+    <p style="font-weight:500;font-size:13px;margin:0 0 10px;">Archivar la temporada actual (26/27) sin teclear</p>
+    <p class="muted" style="font-size:12px;margin:0 0 10px;">Copia la clasificación completa tal cual está calculada ahora mismo.</p>
+    <button class="btn" onclick="archivarHistoricoActual()">📥 Archivar clasificación actual</button>
+    <p id="hist-actual-msg" class="muted" style="font-size:12px;margin-top:8px;"></p>
+
+    <hr style="border-color:var(--border);margin:22px 0;">
+    <p class="muted" style="font-size:12px;margin:0 0 8px;">Temporadas ya archivadas en el Histórico</p>
+    ${temporadas.map(x=>`
+      <div class="row-between" style="padding:8px 4px;border-bottom:1px solid var(--border);font-size:13px;">
+        <span>${x.temporada||x.id} (${(x.jugadores||[]).length} jugadores)</span>
+        <button class="btn" style="padding:2px 8px;" onclick="borrarHistorico('${x.temporada||x.id}')">✕</button>
+      </div>`).join('') || '<p class="muted">Todavía no hay temporadas archivadas.</p>'}
+  `;
+}
+function parsearFilaHistorico(cols){
+  // admite con o sin la columna "Pos." al principio (9 o 10 columnas)
+  if (cols.length >= 10) cols = cols.slice(1);
+  const [nombre, pj, pg, pe, pp, puntos, pv, goles, gxp] = cols;
+  if (!nombre) return null;
+  return {
+    nombre: nombre.trim(),
+    pj: +pj || 0, pg: +pg || 0, pe: +pe || 0, pp: +pp || 0,
+    ptos: +puntos || 0,
+    pv: parseFloat((pv||'0').toString().replace('%','').replace(',','.')) || 0,
+    gf: +goles || 0,
+    gxp: parseFloat((gxp||'0').toString().replace(',','.')) || 0,
+    autogoles: 0
+  };
+}
+async function importarHistoricoPegado(){
+  const temporada = document.getElementById('hist-temporada').value.trim();
+  const texto = document.getElementById('hist-pegado').value.trim();
+  const msg = document.getElementById('hist-msg');
+  if (!temporada || !texto){ alert('Rellena la temporada y pega la tabla.'); return; }
+  const lineas = texto.split('\n').map(l=>l.trim()).filter(l=>l);
+  const jugadores = [];
+  lineas.forEach(linea=>{
+    const cols = linea.includes('\t') ? linea.split('\t') : linea.split(/,|;/);
+    if (/jugador/i.test(cols[0]) || /^pos\.?$/i.test(cols[0])) return; // salta cabecera
+    const j = parsearFilaHistorico(cols);
+    if (j) jugadores.push(j);
+  });
+  if (jugadores.length === 0){ msg.innerText = '❌ No se ha podido leer ninguna fila. Revisa el formato.'; return; }
+  msg.innerText = 'Guardando...';
+  try {
+    await window.dbGuardarHistorico(temporada, {temporada, jugadores});
+    msg.innerText = `✅ ${jugadores.length} jugadores importados a la temporada ${temporada}.`;
+    document.getElementById('hist-pegado').value = '';
+  } catch (err) {
+    msg.innerText = '❌ Error al guardar: ' + (err && err.message ? err.message : err);
+    console.error('Error guardando histórico:', err);
+  }
+}
+window.importarHistoricoPegado = importarHistoricoPegado;
+async function archivarHistoricoActual(){
+  const stats = jugadoresConPartidos();
+  if (stats.length === 0){ alert('Todavía no hay datos suficientes.'); return; }
+  const jugadores = stats.map(s=>({
+    nombre:s.nombre, pj:s.pj, pg:s.pg, pe:s.pe, pp:s.pp, gf:s.gf, autogoles:s.autog, ptos:s.ptos,
+    pv: Math.round(s.pv*100)/100, gxp: Math.round(s.gxp*100)/100
+  }));
+  const msg = document.getElementById('hist-actual-msg');
+  msg.innerText = 'Guardando...';
+  try {
+    await window.dbGuardarHistorico('26/27', {temporada:'26/27', jugadores});
+    msg.innerText = '✅ Clasificación actual archivada en el Histórico.';
+  } catch (err) {
+    msg.innerText = '❌ Error al guardar: ' + (err && err.message ? err.message : err);
+    console.error('Error archivando histórico actual:', err);
+  }
+}
+window.archivarHistoricoActual = archivarHistoricoActual;
+async function borrarHistorico(temporada){
+  if (!confirm(`¿Borrar la temporada ${temporada} del Histórico?`)) return;
+  try { await window.dbBorrarHistorico(temporada); }
+  catch (err) { alert('❌ Error al borrar: ' + (err && err.message ? err.message : err)); console.error(err); }
+}
+window.borrarHistorico = borrarHistorico;
 
 function privadoExportar(){
   return `
