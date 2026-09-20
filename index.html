@@ -46,7 +46,7 @@ select:focus,input:focus{outline:2px solid var(--accent);outline-offset:1px;}
 .tag-warning{background:var(--warning-bg);color:var(--warning);}
 .tag-muted{background:var(--surface-alt);color:var(--text-muted);}
 .tag-accent{background:var(--accent-bg);color:var(--accent);}
-.container{max-width:900px;margin:0 auto;padding:0 14px;}
+.container{max-width:900px;margin:0 auto;padding:0 8px;}
 header{display:flex;align-items:center;justify-content:space-between;padding:14px;border-bottom:1px solid var(--border);}
 .logo-box{display:flex;align-items:center;gap:10px;}
 .logo-icon{width:38px;height:38px;border-radius:var(--radius);background:var(--accent-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px;}
@@ -56,7 +56,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 main{padding:16px 0;}
 .tab-content{display:none;}
 .tab-content.active{display:block;}
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
 @media(max-width:640px){.grid-3{grid-template-columns:1fr 1fr;}}
 @media(max-width:420px){.grid-3{grid-template-columns:1fr;}}
@@ -72,11 +72,12 @@ main{padding:16px 0;}
 .badge-medal{font-size:18px;}
 .circle{width:19px;height:19px;border-radius:50%;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .month-header{font-size:13px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:.03em;margin:18px 0 10px;}
-.jornada-card{border:1px solid var(--border);border-radius:12px;padding:12px;}
+.jornada-card{border:1px solid var(--border);border-radius:12px;padding:10px 8px;}
 .jornada-card.proximo{border:2px solid var(--accent);background:var(--accent-bg);}
 .jornada-card.sinjugar{opacity:.65;}
 .team-col{display:flex;flex-direction:column;gap:5px;}
-.player-line{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:12.5px;}
+.player-line{display:flex;align-items:center;gap:6px;font-size:12.5px;}
+.player-line .pname{width:74px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .divider-v{width:1px;background:var(--border-strong);}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;justify-content:center;align-items:center;}
 .modal-overlay.active{display:flex;}
@@ -126,6 +127,7 @@ table.simple td{padding:6px 8px;border-bottom:1px solid var(--border);white-spac
   <button class="nav-btn" onclick="showTab('ficha', this)">👤 Ficha jugador</button>
   <button class="nav-btn" onclick="showTab('comparar', this)">⚔️ Comparar</button>
   <button class="nav-btn" onclick="showTab('contabilidad', this)">💰 Contabilidad</button>
+  <button class="nav-btn" onclick="showTab('historico', this)">📊 Histórico</button>
   <button class="nav-btn" onclick="accederPrivado(this)">🔒 Privado</button>
 </nav>
 
@@ -138,6 +140,7 @@ table.simple td{padding:6px 8px;border-bottom:1px solid var(--border);white-spac
   <section id="ficha" class="tab-content"></section>
   <section id="comparar" class="tab-content"></section>
   <section id="contabilidad" class="tab-content"></section>
+  <section id="historico" class="tab-content"></section>
   <section id="privado" class="tab-content"></section>
 </main>
 
@@ -194,6 +197,7 @@ onAuthStateChanged(auth, (user) => {
 const jugadoresCol = collection(db, "jugadores");
 const jornadasCol = collection(db, "jornadas");
 const contabilidadCol = collection(db, "contabilidad");
+const historicoCol = collection(db, "historico_temporadas");
 
 window.dbAgregarJugador = (nombre, categoria) => setDoc(doc(jugadoresCol, nombre), {nombre, categoria});
 window.dbRenombrarJugador = async (actual, nuevo, categoria) => {
@@ -206,6 +210,9 @@ window.dbGuardarMovimientoContabilidad = (idExplicito, data) => {
   return addDoc(contabilidadCol, data);
 };
 window.dbBorrarMovimientoContabilidad = (id) => deleteDoc(doc(contabilidadCol, id));
+const idDoc = (t) => t.replace(/\//g, '-');
+window.dbGuardarHistorico = (temporada, data) => setDoc(doc(historicoCol, idDoc(temporada)), data);
+window.dbBorrarHistorico = (temporada) => deleteDoc(doc(historicoCol, idDoc(temporada)));
 
 onSnapshot(jugadoresCol, (snap) => {
   const lista = [];
@@ -225,6 +232,12 @@ onSnapshot(contabilidadCol, (snap) => {
   window.CONTABILIDAD = lista;
   window.onDatosActualizados && window.onDatosActualizados();
 });
+onSnapshot(historicoCol, (snap) => {
+  const lista = [];
+  snap.forEach(d => lista.push({id:d.id, ...d.data()}));
+  window.HISTORICO = lista;
+  window.onDatosActualizados && window.onDatosActualizados();
+});
 </script>
 
 <script>
@@ -232,6 +245,7 @@ onSnapshot(contabilidadCol, (snap) => {
 window.JUGADORES = window.JUGADORES || [];
 window.JORNADAS_DB = window.JORNADAS_DB || {};
 window.CONTABILIDAD = window.CONTABILIDAD || [];
+window.HISTORICO = window.HISTORICO || [];
 
 const CALENDARIO = (() => {
   const meses = [
@@ -399,13 +413,13 @@ function renderTab(id){
     clasificacion: ()=>window.renderClasificacion(), pichichi: ()=>window.renderPichichi(),
     rachas: ()=>window.renderRachas(), ficha: ()=>window.renderFicha(),
     comparar: ()=>window.renderComparar(), contabilidad: ()=>window.renderContabilidad(),
-    privado: ()=>window.renderPrivado()
+    historico: ()=>window.renderHistorico(), privado: ()=>window.renderPrivado()
   };
   if (map[id]) map[id]();
 }
 window.renderTab = renderTab;
 function renderTodo(){
-  ['inicio','calendario','clasificacion','pichichi','rachas','ficha','comparar','contabilidad','privado'].forEach(id=>{
+  ['inicio','calendario','clasificacion','pichichi','rachas','ficha','comparar','contabilidad','historico','privado'].forEach(id=>{
     const el = document.getElementById(id);
     if (el && el.classList.contains('active')) renderTab(id);
   });
@@ -461,7 +475,10 @@ function cerrarSesionAdmin(){ window.logoutAdminFirebase(); }
 window.cerrarSesionAdmin = cerrarSesionAdmin;
 
 /* Contador en vivo para la sección Calendario */
-setInterval(()=>{ if (document.getElementById('calendario').classList.contains('active')) window.actualizarCuentaAtras && window.actualizarCuentaAtras(); }, 1000);
+setInterval(()=>{
+  if (document.getElementById('calendario').classList.contains('active')) window.actualizarCuentaAtras && window.actualizarCuentaAtras('ca');
+  if (document.getElementById('inicio').classList.contains('active')) window.actualizarCuentaAtras && window.actualizarCuentaAtras('ic');
+}, 1000);
 </script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
