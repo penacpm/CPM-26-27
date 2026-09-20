@@ -77,7 +77,8 @@ main{padding:16px 0;}
 .jornada-card.sinjugar{opacity:.65;}
 .team-col{display:flex;flex-direction:column;gap:5px;}
 .player-line{display:flex;align-items:center;gap:6px;font-size:12.5px;}
-.player-line .pname{width:74px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.player-line .pname{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.player-line .ptags{margin-left:auto;display:flex;gap:3px;flex-shrink:0;}
 .divider-v{width:1px;background:var(--border-strong);}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;justify-content:center;align-items:center;}
 .modal-overlay.active{display:flex;}
@@ -415,7 +416,15 @@ function renderTab(id){
     comparar: ()=>window.renderComparar(), contabilidad: ()=>window.renderContabilidad(),
     historico: ()=>window.renderHistorico(), privado: ()=>window.renderPrivado()
   };
-  if (map[id]) map[id]();
+  if (map[id]){
+    try {
+      map[id]();
+    } catch (err) {
+      console.error('Error al renderizar "'+id+'":', err);
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '<div class="card"><p style="color:var(--danger);font-weight:500;margin:0 0 6px;">⚠️ Ha ocurrido un error al cargar esta sección</p><p class="muted" style="font-size:12px;margin:0;">'+(err && err.message ? err.message : err)+'</p></div>';
+    }
+  }
 }
 window.renderTab = renderTab;
 function renderTodo(){
@@ -484,7 +493,7 @@ setInterval(()=>{
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="app-render.js"></script>
 <script>
-window.addEventListener('DOMContentLoaded', () => { renderInicio(); });
+window.addEventListener('DOMContentLoaded', () => { renderTab('inicio'); });
 </script>
 </body>
 </html>
