@@ -125,6 +125,7 @@ table.simple td{padding:6px 8px;border-bottom:1px solid var(--border);white-spac
 <nav id="main-nav">
   <button class="nav-btn active" onclick="showTab('inicio', this)">🏠 Inicio</button>
   <button class="nav-btn" onclick="showTab('calendario', this)">📅 Calendario</button>
+  <button class="nav-btn" onclick="showTab('calendario2', this)">🆚 Calendario_2</button>
   <button class="nav-btn" onclick="showTab('clasificacion', this)">🏆 Clasificación</button>
   <button class="nav-btn" onclick="showTab('pichichi', this)">🎯 Pichichi</button>
   <button class="nav-btn" onclick="showTab('rachas', this)">🔥 Rachas</button>
@@ -137,6 +138,7 @@ table.simple td{padding:6px 8px;border-bottom:1px solid var(--border);white-spac
 <main class="container">
   <section id="inicio" class="tab-content active"></section>
   <section id="calendario" class="tab-content"></section>
+  <section id="calendario2" class="tab-content"></section>
   <section id="clasificacion" class="tab-content"></section>
   <section id="pichichi" class="tab-content"></section>
   <section id="rachas" class="tab-content"></section>
@@ -413,6 +415,7 @@ window.showTab = showTab;
 function renderTab(id){
   const map = {
     inicio: ()=>window.renderInicio(), calendario: ()=>window.renderCalendario(),
+    calendario2: ()=>window.renderCalendario2(),
     clasificacion: ()=>window.renderClasificacion(), pichichi: ()=>window.renderPichichi(),
     rachas: ()=>window.renderRachas(), ficha: ()=>window.renderFicha(),
     comparar: ()=>window.renderComparar(), contabilidad: ()=>window.renderContabilidad(),
@@ -430,7 +433,7 @@ function renderTab(id){
 }
 window.renderTab = renderTab;
 function renderTodo(){
-  ['inicio','calendario','clasificacion','pichichi','rachas','ficha','comparar','contabilidad','historico','privado'].forEach(id=>{
+  ['inicio','calendario','calendario2','clasificacion','pichichi','rachas','ficha','comparar','contabilidad','historico','privado'].forEach(id=>{
     const el = document.getElementById(id);
     if (el && el.classList.contains('active')) renderTab(id);
   });
@@ -488,6 +491,7 @@ window.cerrarSesionAdmin = cerrarSesionAdmin;
 /* Contador en vivo para la sección Calendario */
 setInterval(()=>{
   if (document.getElementById('calendario').classList.contains('active')) window.actualizarCuentaAtras && window.actualizarCuentaAtras('ca');
+  if (document.getElementById('calendario2').classList.contains('active')) window.actualizarCuentaAtras && window.actualizarCuentaAtras('c2');
   if (document.getElementById('inicio').classList.contains('active')) window.actualizarCuentaAtras && window.actualizarCuentaAtras('ic');
 }, 1000);
 </script>
