@@ -181,17 +181,18 @@ function renderJornadaCard2(c, prox){
   const esProximo = prox && prox.numero === c.numero;
   let estiloCard = '', etiqueta = '';
   if (jugado){
-    estiloCard = 'border:2px solid var(--accent);background:var(--accent-bg);';
+    estiloCard = 'border:2px solid #4a90d9;background:rgba(74,144,217,0.22);';
     etiqueta = `<span class="tag tag-success">JUGADO</span>`;
   } else if (esProximo){
-    estiloCard = 'border:2px solid var(--warning);background:var(--warning-bg);';
-    etiqueta = `<span class="tag tag-warning">PRÓXIMO</span>`;
+    estiloCard = 'border:2px solid var(--warning);background:var(--warning-bg);color:#111;';
+    etiqueta = `<span class="tag" style="background:var(--danger);color:#fff;">PRÓXIMO</span>`;
   } else {
     estiloCard = 'border:1px solid var(--border);opacity:.65;';
     etiqueta = `<span class="tag tag-muted">SIN JUGAR</span>`;
   }
 
-  let cuerpo = `<p class="secondary" style="font-size:12px;margin:8px 0 0;">${fmtFecha(c.fecha,true)}</p>`;
+  const colorFecha = esProximo ? 'color:#333;' : '';
+  let cuerpo = `<p class="secondary" style="font-size:12px;margin:8px 0 0;${colorFecha}">${fmtFecha(c.fecha,true)}</p>`;
   if (jugado){
     const m = calcularMarcador(jd);
     const cols = (equipo, lista) => lista.map(j=>{
@@ -334,7 +335,7 @@ function renderClasificacion(){
     const supl = esSustituto(s.nombre) ? ` <span class="tag tag-accent" style="font-size:8px;">SUSTITUTO</span>` : '';
     html += `<div style="display:flex;align-items:center;gap:20px;padding:10px 16px;border-bottom:1px solid var(--border);">
       <span style="width:22px;">${medalOrPos(i)}</span>
-      <span style="width:110px;font-weight:500;font-size:13px;${destacar('alfabetico',crit)}">${s.nombre}${supl}</span>
+      <span style="width:110px;font-weight:500;font-size:13px;white-space:nowrap;${destacar('alfabetico',crit)}">${s.nombre}${supl}</span>
       <div style="width:120px;display:flex;gap:3px;">${ultimos5Circulos(s.hist,'estado')}</div>
       <span class="secondary" style="width:34px;text-align:center;font-size:12px;${destacar('pj',crit)}">${s.pj}</span>
       <span class="secondary" style="width:34px;text-align:center;font-size:12px;${destacar('pg',crit)}">${s.pg}</span>
@@ -404,16 +405,17 @@ function renderPichichi(){
   </div>`;
   html += `<div style="display:flex;align-items:center;gap:14px;padding:8px 12px;border-bottom:1px solid var(--border);">
     <span class="muted" style="width:22px;font-size:11px;">#</span>
-    <span class="muted" style="width:90px;font-size:11px;">Jugador</span>
+    <span class="muted" style="width:130px;font-size:11px;">Jugador</span>
     <span class="muted" style="font-size:11px;">Últimos 5</span>
     <span class="muted" style="margin-left:auto;font-size:11px;">PJ</span>
     <span class="muted" style="width:44px;font-size:11px;text-align:center;${destacar('gxp',crit)}">GxP</span>
     <span class="muted" style="width:40px;font-size:11px;text-align:center;${destacar('gf',crit)}">Goles</span>
   </div>`;
   stats.forEach((s,i)=>{
+    const supl = esSustituto(s.nombre) ? ` <span class="tag tag-accent" style="font-size:8px;">SUSTITUTO</span>` : '';
     html += `<div class="card" style="display:flex;align-items:center;gap:14px;margin-top:8px;padding:10px 12px;">
       <span style="width:22px;">${medalOrPos(i)}</span>
-      <span style="width:90px;font-weight:500;font-size:13px;">${s.nombre}</span>
+      <span style="width:130px;font-weight:500;font-size:13px;white-space:nowrap;">${s.nombre}${supl}</span>
       <div style="display:flex;gap:3px;">${ultimos5Circulos(s.hist,'goles')}</div>
       <span class="secondary" style="margin-left:auto;font-size:12px;">${s.pj}</span>
       <span class="secondary" style="width:44px;text-align:center;font-size:12px;${destacar('gxp',crit)}">${dec2(s.gxp)}</span>
