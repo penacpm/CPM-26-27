@@ -127,7 +127,7 @@ function renderJornadaCard(c, prox){
       let tags = '';
       if (+j.goles>0) tags += `<span class="tag tag-success">${j.goles} G</span>`;
       if (+j.autogoles>0) tags += ` <span class="tag tag-danger">${j.autogoles} PP</span>`;
-      const supl = esSustituto(j.nombre) ? ` <span class="tag tag-muted" style="font-size:8px;">SUPL</span>` : '';
+      const supl = esSustituto(j.nombre) ? ` <span class="tag tag-accent" style="font-size:8px;">S</span>` : '';
       return `<div class="player-line"><span class="pname">${j.nombre}${supl}</span><span class="ptags">${tags}</span></div>`;
     }).join('');
     cuerpo = `<p class="secondary" style="font-size:12px;margin:8px 0 0;">${fmtFecha(c.fecha,true)}</p>
@@ -171,83 +171,6 @@ function renderCalendario(){
   actualizarCuentaAtras('ca');
 }
 window.renderCalendario = renderCalendario;
-
-/* ============================================================
-   CALENDARIO_2 (versión de prueba para comparar estilos)
-   ============================================================ */
-function renderJornadaCard2(c, prox){
-  const jd = window.JORNADAS_DB[c.numero];
-  const jugado = jd && jd.jugado;
-  const esProximo = prox && prox.numero === c.numero;
-  let estiloCard = '', etiqueta = '';
-  if (jugado){
-    estiloCard = 'border:2px solid #4a90d9;background:rgba(74,144,217,0.22);';
-    etiqueta = `<span class="tag tag-success">JUGADO</span>`;
-  } else if (esProximo){
-    estiloCard = 'border:2px solid var(--warning);background:var(--warning-bg);color:#111;';
-    etiqueta = `<span class="tag" style="background:var(--danger);color:#fff;">PRÓXIMO</span>`;
-  } else {
-    estiloCard = 'border:1px solid var(--border);opacity:.65;';
-    etiqueta = `<span class="tag tag-muted">SIN JUGAR</span>`;
-  }
-
-  const colorFecha = esProximo ? 'color:#333;' : '';
-  let cuerpo = `<p class="secondary" style="font-size:12px;margin:8px 0 0;${colorFecha}">${fmtFecha(c.fecha,true)}</p>`;
-  if (jugado){
-    const m = calcularMarcador(jd);
-    const cols = (equipo, lista) => lista.map(j=>{
-      const esBlanco = equipo==='blanco';
-      const cajaGol = esBlanco
-        ? 'background:#fff;color:#111;border:1px solid var(--border-strong);'
-        : 'background:#111;color:#fff;border:1px solid #111;';
-      let tags = '';
-      if (+j.goles>0) tags += `<span class="tag" style="${cajaGol}">${j.goles} G</span>`;
-      if (+j.autogoles>0) tags += ` <span class="tag tag-danger">${j.autogoles} PP</span>`;
-      const supl = esSustituto(j.nombre) ? ` <span class="tag tag-accent" style="font-size:8px;">S</span>` : '';
-      return `<div class="player-line"><span class="pname">${j.nombre}${supl}</span><span class="ptags">${tags}</span></div>`;
-    }).join('');
-    cuerpo = `<p class="secondary" style="font-size:12px;margin:8px 0 0;">${fmtFecha(c.fecha,true)}</p>
-      <p style="font-weight:500;text-align:center;margin:8px 0 10px;">BLANCO ${m.golesBlanco} – ${m.golesNegro} NEGRO</p>
-      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:10px;">
-        <div class="team-col"><p class="muted center" style="font-size:10px;margin:0 0 4px;">BLANCO</p>${cols('blanco', jd.blanco)}</div>
-        <div class="divider-v"></div>
-        <div class="team-col"><p class="muted center" style="font-size:10px;margin:0 0 4px;">NEGRO</p>${cols('negro', jd.negro)}</div>
-      </div>`;
-  }
-  return `<div class="jornada-card" style="${estiloCard}">
-    <div class="row-between"><span style="font-weight:500;">Jornada ${c.numero}</span>${etiqueta}</div>
-    ${cuerpo}
-  </div>`;
-}
-
-function renderCalendario2(){
-  const el = document.getElementById('calendario2');
-  const prox = proximaJornada();
-  let html = `<p class="muted" style="font-size:12px;margin:0 0 14px;">🆚 Versión de prueba — para comparar con la pestaña Calendario original</p>`;
-  html += `<div class="card" style="text-align:center;margin-bottom:20px;">`;
-  if (prox){
-    html += `<p class="muted" style="font-size:12px;margin:0 0 4px;">Jornada ${prox.numero} · ${fmtFecha(prox.fecha,true)}</p>
-      <div style="display:flex;justify-content:center;gap:14px;margin-top:8px;">
-        <div><p style="font-size:22px;font-weight:500;margin:0;" id="c2-d">-</p><p class="muted" style="font-size:10px;margin:0;">días</p></div>
-        <div><p style="font-size:22px;font-weight:500;margin:0;" id="c2-h">-</p><p class="muted" style="font-size:10px;margin:0;">horas</p></div>
-        <div><p style="font-size:22px;font-weight:500;margin:0;" id="c2-m">-</p><p class="muted" style="font-size:10px;margin:0;">min</p></div>
-        <div><p style="font-size:22px;font-weight:500;margin:0;" id="c2-s">-</p><p class="muted" style="font-size:10px;margin:0;">seg</p></div>
-      </div>`;
-  } else { html += `<p class="muted">Temporada terminada</p>`; }
-  html += `</div>`;
-
-  const meses = {};
-  CALENDARIO.forEach(c=>{ (meses[c.mes] = meses[c.mes]||[]).push(c); });
-  Object.keys(meses).forEach(mes=>{
-    html += `<p class="month-header">${mes}</p><div class="grid-2">`;
-    meses[mes].forEach(c=>{ html += renderJornadaCard2(c, prox); });
-    html += `</div>`;
-  });
-
-  el.innerHTML = html;
-  actualizarCuentaAtras('c2');
-}
-window.renderCalendario2 = renderCalendario2;
 
 /* ============================================================
    RENDER: CLASIFICACIÓN
@@ -317,32 +240,32 @@ function renderClasificacion(){
   </div>`;
 
   html += `<div class="scrollx card" style="padding:0;">
-    <div style="min-width:840px;">
-      <div style="display:flex;align-items:center;gap:20px;padding:10px 16px;border-bottom:1px solid var(--border);">
+    <div style="min-width:700px;">
+      <div class="tabla-row">
         <span class="muted" style="width:22px;font-size:11px;">#</span>
-        <span class="muted" style="width:110px;font-size:11px;${destacar('alfabetico',crit)}">Jugador</span>
-        <span class="muted" style="width:120px;font-size:11px;">Últimos 5</span>
-        <span class="muted" style="width:34px;font-size:11px;text-align:center;${destacar('pj',crit)}">PJ</span>
-        <span class="muted" style="width:34px;font-size:11px;text-align:center;${destacar('pg',crit)}">PG</span>
-        <span class="muted" style="width:34px;font-size:11px;text-align:center;${destacar('pe',crit)}">PE</span>
-        <span class="muted" style="width:34px;font-size:11px;text-align:center;${destacar('pp',crit)}">PP</span>
+        <span class="muted" style="width:130px;font-size:11px;${destacar('alfabetico',crit)}">Jugador</span>
+        <span class="muted" style="width:115px;font-size:11px;">Últimos 5</span>
+        <span class="muted" style="width:32px;font-size:11px;text-align:center;${destacar('pj',crit)}">PJ</span>
+        <span class="muted" style="width:32px;font-size:11px;text-align:center;${destacar('pg',crit)}">PG</span>
+        <span class="muted" style="width:32px;font-size:11px;text-align:center;${destacar('pe',crit)}">PE</span>
+        <span class="muted" style="width:32px;font-size:11px;text-align:center;${destacar('pp',crit)}">PP</span>
         <span class="muted" style="width:44px;font-size:11px;text-align:center;${destacar('pv',crit)}">%V</span>
-        <span class="muted" style="width:34px;font-size:11px;text-align:center;${destacar('gf',crit)}">GF</span>
+        <span class="muted" style="width:32px;font-size:11px;text-align:center;${destacar('gf',crit)}">GF</span>
         <span class="muted" style="width:44px;font-size:11px;text-align:center;${destacar('gxp',crit)}">GxP</span>
         <span class="muted" style="width:44px;font-size:11px;text-align:center;${destacar('ptos',crit)}">PTOS</span>
       </div>`;
   stats.forEach((s,i)=>{
-    const supl = esSustituto(s.nombre) ? ` <span class="tag tag-accent" style="font-size:8px;">SUSTITUTO</span>` : '';
-    html += `<div style="display:flex;align-items:center;gap:20px;padding:10px 16px;border-bottom:1px solid var(--border);">
+    const supl = esSustituto(s.nombre) ? ` <span class="tag tag-accent" style="font-size:8px;">S</span>` : '';
+    html += `<div class="tabla-row">
       <span style="width:22px;">${medalOrPos(i)}</span>
-      <span style="width:110px;font-weight:500;font-size:13px;white-space:nowrap;${destacar('alfabetico',crit)}">${s.nombre}${supl}</span>
-      <div style="width:120px;display:flex;gap:3px;">${ultimos5Circulos(s.hist,'estado')}</div>
-      <span class="secondary" style="width:34px;text-align:center;font-size:12px;${destacar('pj',crit)}">${s.pj}</span>
-      <span class="secondary" style="width:34px;text-align:center;font-size:12px;${destacar('pg',crit)}">${s.pg}</span>
-      <span class="secondary" style="width:34px;text-align:center;font-size:12px;${destacar('pe',crit)}">${s.pe}</span>
-      <span class="secondary" style="width:34px;text-align:center;font-size:12px;${destacar('pp',crit)}">${s.pp}</span>
+      <span style="width:130px;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${destacar('alfabetico',crit)}">${s.nombre}${supl}</span>
+      <div style="width:115px;display:flex;gap:3px;">${ultimos5Circulos(s.hist,'estado')}</div>
+      <span class="secondary" style="width:32px;text-align:center;font-size:12px;${destacar('pj',crit)}">${s.pj}</span>
+      <span class="secondary" style="width:32px;text-align:center;font-size:12px;${destacar('pg',crit)}">${s.pg}</span>
+      <span class="secondary" style="width:32px;text-align:center;font-size:12px;${destacar('pe',crit)}">${s.pe}</span>
+      <span class="secondary" style="width:32px;text-align:center;font-size:12px;${destacar('pp',crit)}">${s.pp}</span>
       <span class="secondary" style="width:44px;text-align:center;font-size:12px;${destacar('pv',crit)}">${dec2(s.pv)}%</span>
-      <span class="secondary" style="width:34px;text-align:center;font-size:12px;${destacar('gf',crit)}">${s.gf}</span>
+      <span class="secondary" style="width:32px;text-align:center;font-size:12px;${destacar('gf',crit)}">${s.gf}</span>
       <span class="secondary" style="width:44px;text-align:center;font-size:12px;${destacar('gxp',crit)}">${dec2(s.gxp)}</span>
       <span style="width:44px;text-align:center;font-weight:500;font-size:14px;${destacar('ptos',crit)}">${s.ptos}</span>
     </div>`;
@@ -403,25 +326,27 @@ function renderPichichi(){
       ${window.ordenPichichi.asc?'⬆ Menor a mayor':'⬇ Mayor a menor'}
     </button>
   </div>`;
-  html += `<div style="display:flex;align-items:center;gap:14px;padding:8px 12px;border-bottom:1px solid var(--border);">
-    <span class="muted" style="width:22px;font-size:11px;">#</span>
-    <span class="muted" style="width:130px;font-size:11px;">Jugador</span>
-    <span class="muted" style="font-size:11px;">Últimos 5</span>
-    <span class="muted" style="margin-left:auto;font-size:11px;">PJ</span>
-    <span class="muted" style="width:44px;font-size:11px;text-align:center;${destacar('gxp',crit)}">GxP</span>
-    <span class="muted" style="width:40px;font-size:11px;text-align:center;${destacar('gf',crit)}">Goles</span>
-  </div>`;
+  html += `<div class="scrollx card" style="padding:0;"><div style="min-width:620px;">
+    <div class="tabla-row">
+      <span class="muted" style="width:22px;font-size:11px;">#</span>
+      <span class="muted" style="width:130px;font-size:11px;">Jugador</span>
+      <span class="muted" style="width:115px;font-size:11px;">Últimos 5</span>
+      <span class="muted" style="width:40px;font-size:11px;text-align:center;">PJ</span>
+      <span class="muted" style="width:44px;font-size:11px;text-align:center;${destacar('gxp',crit)}">GxP</span>
+      <span class="muted" style="width:44px;font-size:11px;text-align:center;${destacar('gf',crit)}">Goles</span>
+    </div>`;
   stats.forEach((s,i)=>{
-    const supl = esSustituto(s.nombre) ? ` <span class="tag tag-accent" style="font-size:8px;">SUSTITUTO</span>` : '';
-    html += `<div class="card" style="display:flex;align-items:center;gap:14px;margin-top:8px;padding:10px 12px;">
+    const supl = esSustituto(s.nombre) ? ` <span class="tag tag-accent" style="font-size:8px;">S</span>` : '';
+    html += `<div class="tabla-row">
       <span style="width:22px;">${medalOrPos(i)}</span>
-      <span style="width:130px;font-weight:500;font-size:13px;white-space:nowrap;">${s.nombre}${supl}</span>
-      <div style="display:flex;gap:3px;">${ultimos5Circulos(s.hist,'goles')}</div>
-      <span class="secondary" style="margin-left:auto;font-size:12px;">${s.pj}</span>
+      <span style="width:130px;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.nombre}${supl}</span>
+      <div style="width:115px;display:flex;gap:3px;">${ultimos5Circulos(s.hist,'goles')}</div>
+      <span class="secondary" style="width:40px;text-align:center;font-size:12px;">${s.pj}</span>
       <span class="secondary" style="width:44px;text-align:center;font-size:12px;${destacar('gxp',crit)}">${dec2(s.gxp)}</span>
-      <span style="width:40px;text-align:center;font-weight:500;font-size:15px;${destacar('gf',crit)}">${s.gf}</span>
+      <span style="width:44px;text-align:center;font-weight:500;font-size:15px;${destacar('gf',crit)}">${s.gf}</span>
     </div>`;
   });
+  html += `</div></div>`;
   html += `<p class="muted" style="font-size:11px;margin:8px 0 0;">Criterios de desempate: Goles → GxP → Alfabético</p>`;
   el.innerHTML = html;
 }
