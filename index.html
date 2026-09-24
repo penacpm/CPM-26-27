@@ -206,6 +206,30 @@ const historicoCol = collection(db, "historico_temporadas");
 
 window.dbAgregarJugador = (nombre, categoria) => setDoc(doc(jugadoresCol, nombre), {nombre, categoria});
 window.dbRenombrarJugador = async (actual, nuevo, categoria) => {
+  if (actual !== nuevo) {
+    // Actualizar el nombre en todas las jornadas ya guardadas donde jugó
+    const jornadasActuales = window.JORNADAS_DB || {};
+    for (const numero of Object.keys(jornadasActuales)) {
+      const jd = jornadasActuales[numero];
+      if (!jd || !jd.jugado) continue;
+      let cambiado = false;
+      const reemplazar = (lista) => (lista || []).map(j => {
+        if (j.nombre === actual) { cambiado = true; return {...j, nombre: nuevo}; }
+        return j;
+      });
+      const blanco = reemplazar(jd.blanco);
+      const negro = reemplazar(jd.negro);
+      if (cambiado) await setDoc(doc(jornadasCol, numero), {...jd, blanco, negro});
+    }
+    // Actualizar el concepto de sus aportaciones al bote en Contabilidad
+    const movimientos = window.CONTABILIDAD || [];
+    for (const m of movimientos) {
+      if (m.concepto === `Suplente ${actual}`) {
+        const {id, ...datos} = m;
+        await setDoc(doc(contabilidadCol, id), {...datos, concepto: `Suplente ${nuevo}`});
+      }
+    }
+  }
   await setDoc(doc(jugadoresCol, nuevo), {nombre: nuevo, categoria});
   if (actual !== nuevo) await deleteDoc(doc(jugadoresCol, actual));
 };
