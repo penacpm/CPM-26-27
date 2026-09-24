@@ -889,10 +889,17 @@ function privadoModJugador(){
 async function guardarModJugador(){
   const nuevo = document.getElementById('mj-nombre').value.trim().toUpperCase();
   const categoria = document.getElementById('mj-categoria').value;
+  const msg = document.getElementById('mj-msg');
   if (!nuevo){ alert('Escribe un nombre.'); return; }
-  await window.dbRenombrarJugador(window.modJugSel, nuevo, categoria);
-  window.modJugSel = nuevo;
-  document.getElementById('mj-msg').innerText = '✅ Jugador actualizado.';
+  msg.innerText = 'Guardando...';
+  try {
+    await window.dbRenombrarJugador(window.modJugSel, nuevo, categoria);
+    window.modJugSel = nuevo;
+    msg.innerText = '✅ Jugador actualizado (incluidas sus jornadas y aportaciones al bote).';
+  } catch (err) {
+    msg.innerText = '❌ Error al guardar: ' + (err && err.message ? err.message : err);
+    console.error('Error renombrando jugador:', err);
+  }
 }
 window.guardarModJugador = guardarModJugador;
 
